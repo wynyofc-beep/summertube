@@ -23,10 +23,15 @@ app.get('/download', async (req, res) => {
         res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
 
         ytdl(videoURL, {
-            format: 'mp4',
-            quality: 'highestvideo',
-            filter: 'audioandvideo'
-        }).pipe(res);
+    format: 'mp4',
+    quality: 'highestvideo',
+    filter: 'audioandvideo',
+    requestOptions: {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        }
+    }
+}).pipe(res);
 
     } catch (err) {
         res.status(500).send('Erro no download. O YouTube pode ter bloqueado o servidor.');
