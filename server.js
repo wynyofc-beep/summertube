@@ -30,15 +30,10 @@ app.get('/download', async (req, res) => {
 
         // Inicia o download com configurações de segurança
         ytdl(videoURL, {
-            format: 'mp4',
-            quality: 'highestvideo',
-            filter: 'audioandvideo',
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                }
-            }
-        }).pipe(res);
+    quality: 'highestaudio', // Tente baixar apenas o áudio primeiro para testar
+    filter: 'audioonly'
+}).pipe(res);
+
 
     } catch (err) {
         console.error(err);
