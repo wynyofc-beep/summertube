@@ -41,4 +41,6 @@ app.get('/download', async (req, res) => {
 
 app.listen(3000, () => {
     console.log('SummerTube voando na porta 3000!');
+app.use(express.static('.')); 
+
 });
