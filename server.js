@@ -2,6 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
+// 1. ISSO ATIVA A INTERFACE (O INDEX.HTML)
+app.use(express.static('.'));
+
 // Rota de download turbinada pelo Cobalt
 app.get('/download', async (req, res) => {
     const videoUrl = req.query.url;
@@ -11,10 +14,9 @@ app.get('/download', async (req, res) => {
     }
 
     try {
-        // 1. Pedimos o link de download para a API do Cobalt
         const response = await axios.post('https://api.cobalt.tools/api/json', {
             url: videoUrl,
-            videoQuality: '720', // Você pode mudar para '1080' ou '360'
+            videoQuality: '720',
             downloadMode: 'video'
         }, {
             headers: {
@@ -23,11 +25,9 @@ app.get('/download', async (req, res) => {
             }
         });
 
-        // 2. O Cobalt nos devolve um link direto para o arquivo
         const downloadUrl = response.data.url;
 
         if (downloadUrl) {
-            // 3. Redirecionamos o usuário direto para o download seguro
             res.redirect(downloadUrl);
         } else {
             res.status(500).send('Erro: O Cobalt não conseguiu gerar o link.');
@@ -39,8 +39,9 @@ app.get('/download', async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('SummerTube voando na porta 3000!');
-app.use(express.static('.')); 
-
+// 2. PORTA DINÂMICA PARA O RAILWAY NÃO DERRUBAR O SITE
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => {
+    console.log(`SummerTube voando na porta ${port}!`);
 });
+
