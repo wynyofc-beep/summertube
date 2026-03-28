@@ -1,47 +1,44 @@
 const express = require('express');
-const cors = require('cors');
-const ytdl = require('@distube/ytdl-core');
-const path = require('path');
+const axios = require('axios');
 const app = express();
 
-app.use(cors());
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
+// Rota de download turbinada pelo Cobalt
 app.get('/download', async (req, res) => {
-    try {
-        const videoURL = req.query.url;
-        if (!videoURL) return res.status(400).send('Insira uma URL.');
+    const videoUrl = req.query.url;
 
-        // Obtém os dados do vídeo com um "disfarce" de navegador
-        const info = await ytdl.getInfo(videoURL, {
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                    'Cookie': '' // Opcional: deixar vazio ajuda a evitar rastreio de bot
-                }
+    if (!videoUrl) {
+        return res.status(400).send('Por favor, envie uma URL válida.');
+    }
+
+    try {
+        // 1. Pedimos o link de download para a API do Cobalt
+        const response = await axios.post('https://api.cobalt.tools/api/json', {
+            url: videoUrl,
+            videoQuality: '720', // Você pode mudar para '1080' ou '360'
+            downloadMode: 'video'
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
 
-        const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
-        res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
+        // 2. O Cobalt nos devolve um link direto para o arquivo
+        const downloadUrl = response.data.url;
 
-        // Inicia o download com configurações de segurança
-        ytdl(videoURL, {
-    quality: 'highestaudio', // Tente baixar apenas o áudio primeiro para testar
-    filter: 'audioonly'
-}).pipe(res);
+        if (downloadUrl) {
+            // 3. Redirecionamos o usuário direto para o download seguro
+            res.redirect(downloadUrl);
+        } else {
+            res.status(500).send('Erro: O Cobalt não conseguiu gerar o link.');
+        }
 
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Erro no download. Tente outro vídeo ou aguarde uns minutos.');
+    } catch (error) {
+        console.error('Erro na API Cobalt:', error.message);
+        res.status(500).send('Erro ao processar o vídeo. Tente outro link.');
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(3000, () => {
+    console.log('SummerTube voando na porta 3000!');
 });
