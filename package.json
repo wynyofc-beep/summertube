@@ -1,16 +1,14 @@
 {
   "name": "summertube",
   "version": "1.0.0",
-  "description": "Downloader de vídeos",
+  "description": "Video processor",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "@distube/ytdl-core": "4.15.1",
-    "axios": "^1.14.0",
-    "cors": "^2.8.5",
-    "express": "^4.22.1",
-    "path": "^0.12.7"
+    "axios": "^1.6.0",
+    "express": "^4.18.0"
   }
 }
+
