@@ -3,55 +3,63 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-// Garante que o Node encontre os arquivos na pasta correta do Railway
+// Serve os arquivos estáticos da pasta atual
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-
 // Rota de download via Cobalt API
-            app.get('/download', async (req, res) => {
+app.get('/download', async (req, res) => {
     const videoUrl = req.query.url;
     console.log("--> Recebi pedido para:", videoUrl);
 
-    if (!videoUrl) return res.status(400).send('URL não enviada');
+    if (!videoUrl) {
+        return res.status(400).send('URL não enviada');
+    }
 
     try {
         const response = await axios.post('https://api.cobalt.tools/api/json', {
             url: videoUrl,
-            videoQuality: '720'
+            videoQuality: '720',
+            downloadMode: 'auto'
         }, {
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://cobalt.tools/',
+                'Origin': 'https://cobalt.tools'
             }
         });
 
-        // O Cobalt costuma retornar 'url' ou 'link'. Testamos os dois:
-        const downloadLink = response.data.url || response.data.link;
+        // Tenta pegar o link de diferentes formas que a API retorna
+        const downloadLink = response.data.url || response.data.link || (response.data.picker ? response.data.picker[0].url : null);
 
         if (downloadLink) {
-            console.log("--> Sucesso! Redirecionando...");
+            console.log("--> Sucesso! Redirecionando para o download.");
             res.redirect(downloadLink);
         } else {
-            console.log("--> API respondeu, mas sem link:", response.data);
-            res.status(500).send('Vídeo não encontrado ou privado.');
+            console.log("--> API respondeu, mas o link não foi encontrado no JSON:", response.data);
+            res.status(500).send('Vídeo não encontrado ou formato não suportado.');
         }
 
     } catch (error) {
-        console.error('--> Erro na API Cobalt:', error.message);
-        res.status(500).send('Erro ao processar o vídeo. Tente outro link.');
+        if (error.response) {
+            console.error('--> Erro na API Cobalt (Status):', error.response.status);
+            console.error('--> Detalhes:', error.response.data);
+        } else {
+            console.error('--> Erro de conexão:', error.message);
+        }
+        res.status(500).send('Erro ao processar o vídeo. A API pode estar instável.');
     }
 });
-
-
 
 // Porta dinâmica para o Railway
 const PORT = process.env.PORT || 8080;
 
-// O '0.0.0.0' é o segredo para o Railway enxergar seu app
+// Escutando em 0.0.0.0 para o Railway não desligar o container
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`SummerTube voando na porta ${PORT}!`);
 });
