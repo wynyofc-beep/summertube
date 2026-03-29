@@ -14,31 +14,36 @@ app.get('/', (req, res) => {
 // Rota de download via Cobalt API
 app.get('/download', async (req, res) => {
     const videoUrl = req.query.url;
-    if (!videoUrl) return res.status(400).send('Por favor, envie uma URL válida.');
+    console.log("Recebi pedido para:", videoUrl); // Log para você ver no Railway
+
+    if (!videoUrl) return res.status(400).send('URL necessária');
 
     try {
         const response = await axios.post('https://api.cobalt.tools/api/json', {
             url: videoUrl,
             videoQuality: '720',
-            downloadMode: 'video'
         }, {
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0' // Algumas APIs exigem isso
             }
+            timeout: 30000 // Adicione esta linha aqui
         });
 
-        const downloadUrl = response.data.url;
-        if (downloadUrl) {
-            res.redirect(downloadUrl);
+        if (response.data && response.data.url) {
+            console.log("Link gerado com sucesso!");
+            res.redirect(response.data.url);
         } else {
-            res.status(500).send('Erro: O Cobalt não conseguiu gerar o link.');
+            console.log("Cobalt não retornou URL:", response.data);
+            res.status(500).send('O serviço de download não retornou um link válido.');
         }
     } catch (error) {
-        console.error('Erro na API Cobalt:', error.message);
-        res.status(500).send('Erro ao processar o vídeo. Tente outro link.');
+        console.error('Erro detalhado:', error.response ? error.response.data : error.message);
+        res.status(500).send('Erro ao falar com o servidor de download. Tente novamente mais tarde.');
     }
 });
+
 
 // Porta dinâmica para o Railway
 const port = process.env.PORT || 8080;
