@@ -20,19 +20,19 @@ app.get('/download', async (req, res) => {
     }
 
     try {
-        const response = await axios.post('https://api.cobalt.tools/api/json', {
+                const response = await axios.post('https://cobalt.tools/api/json', {
             url: videoUrl,
             videoQuality: '720',
-            downloadMode: 'auto'
         }, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                 'Referer': 'https://cobalt.tools/',
                 'Origin': 'https://cobalt.tools'
             }
         });
+
 
         // Tenta pegar o link de diferentes formas que a API retorna
         const downloadLink = response.data.url || response.data.link || (response.data.picker ? response.data.picker[0].url : null);
