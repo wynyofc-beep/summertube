@@ -36,10 +36,9 @@ app.get('/download', async (req, res) => {
     }
 });
 
-// CONFIGURAÇÃO CRÍTICA PARA RAILWAY
+// Remova o IP fixo 0.0.0.0 e deixe apenas a PORT do processo
 const PORT = process.env.PORT || 8080;
-// Escutar em 0.0.0.0 é obrigatório para o Railway enxergar o app
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
     console.log(`SummerTube online na porta ${PORT}`);
 });
 
