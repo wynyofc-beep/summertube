@@ -5,7 +5,6 @@ const app = express();
 
 app.use(express.static(__dirname));
 
-// Rota raiz para o Railway saber que o app está vivo
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -14,32 +13,35 @@ app.get('/download', async (req, res) => {
     const videoUrl = req.query.url;
     if (!videoUrl) return res.status(400).send('URL ausente');
 
+    console.log("--> Tentando nova rota de escape para:", videoUrl);
+
     try {
-        const response = await axios.post('https://cobalt.tools/api/json', {
-            url: videoUrl,
-            videoQuality: '720'
-        }, {
+        // Tentando uma URL de processamento alternativa
+        const response = await axios.get(`https://api.v02.savetube.me/info?url=${encodeURIComponent(videoUrl)}`, {
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-                'Referer': 'https://cobalt.tools/'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
             }
         });
 
-        const link = response.data.url || response.data.link;
+        // Essa API retorna formatos diferentes, vamos pegar o melhor vídeo
+        const link = response.data.data?.video_formats?.[0]?.url || response.data.data?.url;
+
         if (link) {
+            console.log("--> SUCESSO COM NOVA API!");
             res.redirect(link);
         } else {
-            res.status(500).send('API não retornou link.');
+            console.log("--> Sem link na resposta:", response.data);
+            res.status(500).send('Não encontramos um link de download para este vídeo.');
         }
+
     } catch (error) {
-        res.status(500).send('Erro na conexão com a API.');
+        console.error('--> Erro na nova API:', error.message);
+        res.status(500).send('O servidor de download está ocupado. Tente novamente em instantes.');
     }
 });
 
-// O Railway exige que a porta seja process.env.PORT
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SummerTube ativo na porta ${PORT}`);
+    console.log(`SummerTube voando com novo motor na porta ${PORT}`);
 });
+
