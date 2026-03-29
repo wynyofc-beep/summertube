@@ -3,45 +3,43 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
+// Middleware para processar JSON
+app.use(express.json());
 app.use(express.static(__dirname));
 
+// Rota principal para o "Healthcheck" do Railway
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Rota de download com a nova API (Plano B)
 app.get('/download', async (req, res) => {
     const videoUrl = req.query.url;
     if (!videoUrl) return res.status(400).send('URL ausente');
 
-    console.log("--> Tentando nova rota de escape para:", videoUrl);
-
     try {
-        // Tentando uma URL de processamento alternativa
         const response = await axios.get(`https://api.v02.savetube.me/info?url=${encodeURIComponent(videoUrl)}`, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
         });
 
-        // Essa API retorna formatos diferentes, vamos pegar o melhor vídeo
         const link = response.data.data?.video_formats?.[0]?.url || response.data.data?.url;
 
         if (link) {
-            console.log("--> SUCESSO COM NOVA API!");
             res.redirect(link);
         } else {
-            console.log("--> Sem link na resposta:", response.data);
-            res.status(500).send('Não encontramos um link de download para este vídeo.');
+            res.status(500).send('Link não encontrado nesta API.');
         }
-
     } catch (error) {
-        console.error('--> Erro na nova API:', error.message);
-        res.status(500).send('O servidor de download está ocupado. Tente novamente em instantes.');
+        res.status(500).send('Erro ao conectar com o servidor de download.');
     }
 });
 
+// CONFIGURAÇÃO CRÍTICA PARA RAILWAY
 const PORT = process.env.PORT || 8080;
+// Escutar em 0.0.0.0 é obrigatório para o Railway enxergar o app
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SummerTube voando com novo motor na porta ${PORT}`);
+    console.log(`SummerTube online na porta ${PORT}`);
 });
 
