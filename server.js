@@ -49,8 +49,10 @@ app.get('/', (req, res) => {
 
 
 // Porta dinâmica para o Railway
-const port = process.env.PORT || 8080;
-app.listen(port, '0.0.0.0', () => {
-    console.log(`SummerTube voando na porta ${port}!`);
+const PORT = process.env.PORT || 8080;
+
+// O '0.0.0.0' é o segredo para o Railway enxergar seu app
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SummerTube voando na porta ${PORT}!`);
 });
 
